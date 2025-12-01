@@ -1,0 +1,7 @@
+{
+  "name": "HydroBuddy",
+  "description": "A smart, fun hydration tracker that uses AI to analyze your drinking habits, provides scientific goals based on your body metrics, and generates daily/weekly health reports.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
