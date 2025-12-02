@@ -39,8 +39,8 @@ const App: React.FC = () => {
   // Animation State
   const [animatingDrink, setAnimatingDrink] = useState<DrinkType | null>(null);
 
-  // Long Press Refs
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Long Press Refs - Fix build error by using any for the timer ref
+  const timerRef = useRef<any>(null);
   const isLongPress = useRef(false);
 
   // Load from local storage
@@ -105,6 +105,7 @@ const App: React.FC = () => {
   // Long Press Handlers
   const startPress = () => {
     isLongPress.current = false;
+    // Use window.setTimeout to enforce browser context if possible, but any ref handles both
     timerRef.current = setTimeout(() => {
       isLongPress.current = true;
       setShowCharacterSelector(true);

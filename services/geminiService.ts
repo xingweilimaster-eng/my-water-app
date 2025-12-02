@@ -2,7 +2,32 @@
 import { GoogleGenAI } from "@google/genai";
 import { DrinkLog, UserProfile, GeminiAnalysis } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Helper to safely get the API Key from various environments
+const getApiKey = (): string | undefined => {
+  // 1. Try Vite environment variable (Best for Vercel + Vite)
+  // @ts-ignore
+  if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_KEY) {
+    // @ts-ignore
+    return import.meta.env.VITE_API_KEY;
+  }
+  
+  // 2. Try standard process.env (Node.js / Webpack)
+  if (typeof process !== 'undefined' && process.env) {
+    if (process.env.VITE_API_KEY) return process.env.VITE_API_KEY;
+    if (process.env.API_KEY) return process.env.API_KEY;
+  }
+
+  return undefined;
+};
+
+// Lazy initialization to prevent app crash on load if key is missing
+const getGenAI = (): GoogleGenAI => {
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    throw new Error("API Key 未找到。请在 Vercel 环境变量中配置 VITE_API_KEY。");
+  }
+  return new GoogleGenAI({ apiKey });
+};
 
 const getContextPrompt = (logs: DrinkLog[], profile: UserProfile) => {
   const totalAmount = logs.reduce((sum, log) => sum + log.amount, 0);
@@ -46,38 +71,35 @@ const handleGeminiError = (error: any): string => {
     return "无法连接到 AI 服务器。\n\n如果您在中国大陆，该服务需要科学上网。请检查您的 VPN (梯子) 是否开启并支持全局代理。";
   }
   
-  return "AI 暂时开小差了，请稍后再试。";
+  if (msg.includes('key') || msg.includes('auth')) {
+    return "API Key 无效或未配置。\n请检查 Vercel 环境变量设置 (VITE_API_KEY)。";
+  }
+  
+  return "AI 暂时开小差了，请稍后再试。(" + msg + ")";
 };
 
-// Legacy single-shot analysis
+// Single-shot analysis
 export const analyzeHydration = async (
   logs: DrinkLog[],
   profile: UserProfile,
   period: 'daily' | 'weekly'
 ): Promise<GeminiAnalysis> => {
-  if (!process.env.API_KEY) {
-    return {
-       message: "请配置 API Key。",
-       status: "warning",
-       tip: "需要 API Key 才能进行 AI 分析。"
-    };
-  }
-
-  const context = getContextPrompt(logs, profile);
-  const prompt = `
-    ${context}
-    
-    Task:
-    Provide a JSON summary for a ${period} report.
-    Format:
-    {
-      "status": "excellent" | "good" | "warning" | "bad",
-      "message": "string (Chinese, max 2 sentences)",
-      "tip": "string (Chinese, scientific tip)"
-    }
-  `;
-
   try {
+    const ai = getGenAI(); // Init here safely
+    const context = getContextPrompt(logs, profile);
+    const prompt = `
+      ${context}
+      
+      Task:
+      Provide a JSON summary for a ${period} report.
+      Format:
+      {
+        "status": "excellent" | "good" | "warning" | "bad",
+        "message": "string (Chinese, max 2 sentences)",
+        "tip": "string (Chinese, scientific tip)"
+      }
+    `;
+
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
       contents: prompt,
@@ -93,26 +115,29 @@ export const analyzeHydration = async (
     const errorMsg = handleGeminiError(error);
     return {
       message: errorMsg,
-      status: "good",
-      tip: "保持喝水！"
+      status: "warning",
+      tip: "请检查网络或设置。"
     };
   }
 };
 
-// New Chat Function
+// Chat Function
 export const createChatSession = async (logs: DrinkLog[], profile: UserProfile) => {
-  if (!process.env.API_KEY) throw new Error("API Key missing");
+  try {
+    const ai = getGenAI(); // Init here safely
+    const systemInstruction = getContextPrompt(logs, profile);
 
-  const systemInstruction = getContextPrompt(logs, profile);
+    const chat = ai.chats.create({
+      model: "gemini-2.5-flash",
+      config: {
+        systemInstruction: systemInstruction,
+      }
+    });
 
-  const chat = ai.chats.create({
-    model: "gemini-2.5-flash",
-    config: {
-      systemInstruction: systemInstruction,
-    }
-  });
-
-  return chat;
+    return chat;
+  } catch (error) {
+    throw error;
+  }
 };
 
 export const formatChatError = (error: any): string => {

@@ -29,4 +29,28 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
           <p style={{fontSize: '0.9rem', color: '#666', marginBottom: '2rem'}}>如果您在手机上看到此页面，通常是因为 API Key 配置问题。</p>
           <button 
             onClick={() => window.location.reload()} 
-            style={{ padding: '12px 24px', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '12px', fontSize: '1rem', fontWeight: 'bold',
+            style={{ padding: '12px 24px', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '12px', fontSize: '1rem', fontWeight: 'bold', boxShadow: '0 4px 6px rgba(59, 130, 246, 0.3)' }}
+          >
+            刷新页面
+          </button>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+const rootElement = document.getElementById('root');
+if (!rootElement) {
+  throw new Error("Could not find root element to mount to");
+}
+
+const root = ReactDOM.createRoot(rootElement);
+root.render(
+  <React.StrictMode>
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
+  </React.StrictMode>
+);

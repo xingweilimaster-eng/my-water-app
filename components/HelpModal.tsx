@@ -60,9 +60,10 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                    <Settings size={12} /> 关键配置 (Environment Variables)
                 </div>
                 <p className="mb-1 text-gray-600 font-normal">在 Deploy 按钮上方，点击展开 <strong>Environment Variables</strong> 菜单：</p>
-                <div className="grid grid-cols-[40px_1fr] gap-1 items-center text-[10px]">
+                <div className="grid grid-cols-[80px_1fr] gap-1 items-center text-[10px]">
                    <span className="text-gray-500">Key:</span>
-                   <code className="bg-gray-100 px-1 rounded select-all">API_KEY</code>
+                   {/* UPDATED KEY NAME */}
+                   <code className="bg-amber-100 text-amber-800 px-1 rounded select-all font-bold">VITE_API_KEY</code>
                    
                    <span className="text-gray-500">Value:</span>
                    <code className="bg-gray-100 px-1 rounded overflow-hidden text-ellipsis whitespace-nowrap">粘贴刚才的 AIza...</code>
@@ -70,6 +71,9 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                 <div className="text-right mt-1">
                    <span className="text-[10px] bg-blue-600 text-white px-2 py-0.5 rounded">点击 Add 按钮</span>
                 </div>
+                <p className="text-[10px] text-red-500 mt-1 italic">
+                  注意：Key 必须叫 VITE_API_KEY，否则手机上会白屏！
+                </p>
               </li>
               
               <li>配置完成后，点击底部的 <strong>Deploy</strong>。</li>
