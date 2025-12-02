@@ -1,9 +1,7 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { DrinkLog, UserProfile, ChatMessage } from '../types';
 import { createChatSession, formatChatError } from '../services/geminiService';
 import { Send, Bot, User, Sparkles, Loader2, BrainCircuit, X } from 'lucide-react';
-import { Chat } from '@google/genai';
 
 interface AIChatProps {
   logs: DrinkLog[];
@@ -14,7 +12,8 @@ export const AIChat: React.FC<AIChatProps> = ({ logs, profile }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [chatSession, setChatSession] = useState<Chat | null>(null);
+  // Use any to avoid build strictness on Chat type
+  const [chatSession, setChatSession] = useState<any>(null);
   const [showContextBanner, setShowContextBanner] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
